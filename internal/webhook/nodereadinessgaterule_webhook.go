@@ -1,0 +1,199 @@
+/*
+Copyright The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package webhook
+
+import (
+	"context"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	readinessv1alpha1 "sigs.k8s.io/node-readiness-controller/api/v1alpha1"
+)
+
+// NodeReadinessRuleWebhook validates NodeReadinessRule resources.
+type NodeReadinessRuleWebhook struct {
+	client.Client
+}
+
+// NewNodeReadinessRuleWebhook creates a new webhook.
+func NewNodeReadinessRuleWebhook(c client.Client) *NodeReadinessRuleWebhook {
+	return &NodeReadinessRuleWebhook{
+		Client: c,
+	}
+}
+
+// validateNodeReadinessRule performs validation logic.
+func (w *NodeReadinessRuleWebhook) validateNodeReadinessRule(ctx context.Context, rule *readinessv1alpha1.NodeReadinessRule, isUpdate bool) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// Validate basic fields
+	allErrs = append(allErrs, w.validateSpec(rule.Spec)...)
+
+	// Check for conflicting rules (same taint key)
+	allErrs = append(allErrs, w.validateTaintConflicts(ctx, rule, isUpdate)...)
+
+	return allErrs
+}
+
+// validateSpec validates the spec fields that CRD CEL based XValidation cannot handle.
+func (w *NodeReadinessRuleWebhook) validateSpec(spec readinessv1alpha1.NodeReadinessRuleSpec) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// validate that the nodeSelector isn't empty
+	selector, err := metav1.LabelSelectorAsSelector(&spec.NodeSelector)
+	if err != nil {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "nodeSelector"), spec.NodeSelector, err.Error()))
+	}
+	if selector != nil && selector.Empty() {
+		allErrs = append(allErrs, field.Required(field.NewPath("spec", "nodeSelector"), "nodeSelector must not be empty"))
+	}
+
+	return allErrs
+}
+
+// validateTaintConflicts checks for conflicting rules with the same taint key.
+func (w *NodeReadinessRuleWebhook) validateTaintConflicts(ctx context.Context, rule *readinessv1alpha1.NodeReadinessRule, isUpdate bool) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// List all existing rules
+	ruleList := &readinessv1alpha1.NodeReadinessRuleList{}
+	if err := w.List(ctx, ruleList); err != nil {
+		// If we can't list rules, allow the operation but log the issue
+		ctrl.Log.Error(err, "Failed to list rules for conflict validation")
+		return allErrs
+	}
+
+	taintField := field.NewPath("spec", "taint", "key")
+
+	for _, existingRule := range ruleList.Items {
+		// Skip self when updating
+		if isUpdate && existingRule.Name == rule.Name {
+			continue
+		}
+
+		// Check for same taint key and effect
+		if existingRule.Spec.Taint.Key == rule.Spec.Taint.Key &&
+			existingRule.Spec.Taint.Effect == rule.Spec.Taint.Effect {
+			// Check if node selectors overlap
+			if w.nodeSelectorsOverlap(rule.Spec.NodeSelector, existingRule.Spec.NodeSelector) {
+				allErrs = append(allErrs, field.Invalid(
+					taintField,
+					rule.Spec.Taint.Key,
+					fmt.Sprintf("conflicts with existing rule '%s' - same taint key '%s' and effect '%s' with overlapping node selectors",
+						existingRule.Name, rule.Spec.Taint.Key, rule.Spec.Taint.Effect),
+				))
+			}
+		}
+	}
+
+	return allErrs
+}
+
+// nodeSelectorsOverlap checks if two node selectors overlap.
+func (w *NodeReadinessRuleWebhook) nodeSelectorsOverlap(selector1, selector2 metav1.LabelSelector) bool {
+	// Convert to selectors
+	sel1, err1 := metav1.LabelSelectorAsSelector(&selector1)
+	sel2, err2 := metav1.LabelSelectorAsSelector(&selector2)
+
+	if err1 != nil || err2 != nil {
+		// If we can't parse selectors, assume they overlap for safety
+		return true
+	}
+
+	// Simple heuristic: if selectors are identical, they definitely overlap
+	// For more complex overlap detection, we'd need to analyze the label requirements
+	return sel1.String() == sel2.String()
+}
+
+// generateNoExecuteWarnings generates admission warnings for NoExecute taint usage.
+// NoExecute taints cause immediate pod eviction, which can be disruptive when
+// used with continuous enforcement mode.
+// Note: This is only called on CREATE since taint.effect is immutable after creation.
+func (w *NodeReadinessRuleWebhook) generateNoExecuteWarnings(spec readinessv1alpha1.NodeReadinessRuleSpec) admission.Warnings {
+	var warnings admission.Warnings
+
+	if spec.Taint.Effect != corev1.TaintEffectNoExecute {
+		return warnings
+	}
+
+	// NoExecute with continuous mode is particularly risky
+	if spec.EnforcementMode == readinessv1alpha1.EnforcementModeContinuous {
+		warnings = append(warnings,
+			"CAUTION: NoExecute with continuous mode evicts pods when conditions fail, risking workload disruption. Consider NoSchedule or bootstrap-only")
+	} else {
+		// NoExecute with bootstrap-only is less risky but still worth noting
+		warnings = append(warnings,
+			"NOTE: NoExecute will evict existing pods without tolerations. Ensure critical system pods have appropriate tolerations")
+	}
+
+	return warnings
+}
+
+// +kubebuilder:webhook:path=/validate-readiness-node-x-k8s-io-v1alpha1-nodereadinessrule,mutating=false,failurePolicy=fail,sideEffects=None,groups=readiness.node.x-k8s.io,resources=nodereadinessrules,verbs=create;update,versions=v1alpha1,name=vnodereadinessrule.kb.io,admissionReviewVersions=v1
+// SetupWithManager sets up the webhook with the manager.
+func (w *NodeReadinessRuleWebhook) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewWebhookManagedBy(mgr).
+		For(&readinessv1alpha1.NodeReadinessRule{}).
+		WithValidator(w).
+		Complete()
+}
+
+// Implement the admission.CustomValidator interface.
+var _ webhook.CustomValidator = &NodeReadinessRuleWebhook{}
+
+func (w *NodeReadinessRuleWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	rule, ok := obj.(*readinessv1alpha1.NodeReadinessRule)
+	if !ok {
+		return nil, fmt.Errorf("expected NodeReadinessRule, got %T", obj)
+	}
+
+	if allErrs := w.validateNodeReadinessRule(ctx, rule, false); len(allErrs) > 0 {
+		return nil, fmt.Errorf("validation failed: %v", allErrs)
+	}
+
+	// Generate warnings for NoExecute taint usage
+	warnings := w.generateNoExecuteWarnings(rule.Spec)
+	return warnings, nil
+}
+
+func (w *NodeReadinessRuleWebhook) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	// Update validations are handled at the API level, so we can skip them here to avoid redundant checks.
+
+	newRule, ok := newObj.(*readinessv1alpha1.NodeReadinessRule)
+	if !ok {
+		return nil, fmt.Errorf("expected NodeReadinessRule, got %T", newObj)
+	}
+
+	if allErrs := w.validateNodeReadinessRule(ctx, newRule, true); len(allErrs) > 0 {
+		return nil, fmt.Errorf("validation failed: %v", allErrs)
+	}
+
+	return nil, nil
+}
+
+func (w *NodeReadinessRuleWebhook) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	// No validation needed for delete operations
+	return nil, nil
+}

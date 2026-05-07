@@ -1,0 +1,12 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+  annotations:
+    cert-manager.io/inject-ca-from: nrr-system/nrr-serving-cert
+webhooks:
+- name: vnodereadinessrule.kb.io
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system

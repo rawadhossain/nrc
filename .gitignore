@@ -1,0 +1,40 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/*
+hack/tools/bin
+Dockerfile.cross
+
+# Kubeconfig might contain secrets
+*.kubeconfig
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Kubernetes Generated files - skip generated files, except for vendored files
+!vendor/**/zz_generated.*
+
+# editor and IDE paraphernalia
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# pending test workloads
+hack/test-workloads/ignore-pending
+hack/test-workloads/ignore-pending/*
+
+# LLM specific contexts
+CLAUDE.md
+GEMINI.md
+

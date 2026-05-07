@@ -1,0 +1,16 @@
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: bootstrap-test-rule
+spec:
+  conditions:
+    - type: "TestReady"
+      requiredStatus: "True"
+  taint:
+    key: "readiness.k8s.io/TestReady"
+    effect: "NoSchedule"
+    value: "pending"
+  enforcementMode: "bootstrap-only"
+  nodeSelector:
+    matchLabels:
+      e2e-test: "bootstrap"

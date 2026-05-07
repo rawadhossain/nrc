@@ -1,0 +1,36 @@
+# More info: https://docs.docker.com/engine/reference/builder/#dockerignore-file
+# Compatible with both Docker and Podman
+# Use explicit exclusions (not negation patterns) for better compatibility
+
+# Build artifacts and unnecessary files
+bin/
+dist/
+.git/
+.github/
+docs/
+examples/
+hack/
+test/
+*.md
+*.tape
+*.gif
+*.mp4
+*.svg
+*.png
+
+# Test files
+**/*_test.go
+
+# Cache directories
+.cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
