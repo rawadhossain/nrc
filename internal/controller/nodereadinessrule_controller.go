@@ -58,6 +58,9 @@ type RuleReadinessController struct {
 	// Cache for efficient rule lookup
 	ruleCacheMutex sync.RWMutex
 	ruleCache      map[string]*readinessv1alpha1.NodeReadinessRule // ruleName -> rule
+
+	// bootstrapStartTimes records when NRC first applied the rule's managed taint per node (key: bootstrapStartKey).
+	bootstrapStartTimes sync.Map
 }
 
 // RuleReconciler handles NodeReadinessRule reconciliation.
@@ -93,6 +96,13 @@ func (r *RuleReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager)
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	start := time.Now()
+	ruleLabel := req.Name
+	op := "main"
+	defer func() {
+		metrics.ReconciliationLatency.WithLabelValues(ruleLabel, op).Observe(time.Since(start).Seconds())
+	}()
+
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Reconciling rule", "rule", req.Name)
 
@@ -102,27 +112,37 @@ func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		if apierrors.IsNotFound(err) {
 			log.Info("Rule not found, removing from cache", "rule", req.Name)
 			r.Controller.removeRuleFromCache(ctx, req.Name)
+			op = "not_found"
 			return ctrl.Result{}, nil
 		}
+		op = "error"
 		return ctrl.Result{}, err
 	}
 
+	ruleLabel = rule.Name
 	log = log.WithValues("ruleName", rule.Name)
 	ctx = ctrl.LoggerInto(ctx, log)
 
 	// Add finalizer first if not set to avoid the race condition between init and delete.
 	if finalizerAdded, err := r.ensureFinalizer(ctx, rule, finalizerName); err != nil {
+		op = "error"
 		return ctrl.Result{}, err
 	} else if finalizerAdded {
 		// Adding a finalizer modifies Metadata, not Spec, so the Generation is unchanged.
 		// GenerationChangedPredicate prevents triggering a new reconcile, we must explicitly requeue to proceed.
 		log.V(3).Info("Finalizer added, requeuing")
+		op = "requeue_finalizer"
 		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	// Handle deletion reconciliation loop.
 	if !rule.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(ctx, rule)
+		op = "delete"
+		res, err := r.reconcileDelete(ctx, rule)
+		if err == nil {
+			metrics.RuleLastReconciliationTimestamp.WithLabelValues(rule.Name).Set(float64(time.Now().Unix()))
+		}
+		return res, err
 	}
 
 	// Detect nodeSelector changes and cleanup old nodes
@@ -131,6 +151,7 @@ func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		log.Info("NodeSelector changed, cleaning up nodes from old selector", "rule", rule.Name)
 		if err := r.Controller.cleanupNodesAfterSelectorChange(ctx, cachedRule, rule); err != nil {
 			log.Error(err, "Failed to cleanup nodes after selector change", "rule", rule.Name)
+			op = "error"
 			return ctrl.Result{RequeueAfter: time.Minute}, err
 		}
 	}
@@ -142,6 +163,7 @@ func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	if rule.Spec.DryRun {
 		if err := r.Controller.processDryRun(ctx, rule); err != nil {
 			log.Error(err, "Failed to process dry run", "rule", rule.Name)
+			op = "error"
 			return ctrl.Result{RequeueAfter: time.Minute}, err
 		}
 	} else {
@@ -151,6 +173,7 @@ func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		// Process all applicable nodes for this rule
 		if err := r.Controller.processAllNodesForRule(ctx, rule); err != nil {
 			log.Error(err, "Failed to process nodes for rule", "rule", rule.Name)
+			op = "error"
 			return ctrl.Result{RequeueAfter: time.Minute}, err
 		}
 	}
@@ -158,15 +181,19 @@ func (r *RuleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	// Update rule status
 	if err := r.Controller.updateRuleStatus(ctx, rule); err != nil {
 		log.Error(err, "Failed to update rule status", "rule", rule.Name)
+		op = "error"
 		return ctrl.Result{RequeueAfter: time.Minute}, err
 	}
 
 	// Clean up status for deleted nodes
 	if err := r.Controller.cleanupDeletedNodes(ctx, rule); err != nil {
 		log.Error(err, "Failed to clean up deleted nodes", "rule", rule.Name)
+		op = "error"
 		return ctrl.Result{RequeueAfter: time.Minute}, err
 	}
 
+	metrics.RuleLastReconciliationTimestamp.WithLabelValues(rule.Name).Set(float64(time.Now().Unix()))
+	op = "success"
 	return ctrl.Result{}, nil
 }
 
@@ -290,12 +317,41 @@ func (r *RuleReadinessController) processAllNodesForRule(ctx context.Context, ru
 	}
 
 	log.Info("Completed processing nodes for rule", "rule", rule.Name, "processedCount", len(appliedNodes))
+	r.updateNodesByStateGauges(rule)
 	return nil
+}
+
+// updateNodesByStateGauges publishes ready / not_ready / bootstrapping counts from current node evaluations.
+func (r *RuleReadinessController) updateNodesByStateGauges(rule *readinessv1alpha1.NodeReadinessRule) {
+	var ready, notReady, bootstrapping int
+	for _, ev := range rule.Status.NodeEvaluations {
+		switch ev.TaintStatus {
+		case readinessv1alpha1.TaintStatusAbsent:
+			ready++
+		case readinessv1alpha1.TaintStatusPresent:
+			if rule.Spec.EnforcementMode == readinessv1alpha1.EnforcementModeBootstrapOnly {
+				bootstrapping++
+			} else {
+				notReady++
+			}
+		default:
+		}
+	}
+	metrics.NodesByState.WithLabelValues(rule.Name, "ready").Set(float64(ready))
+	metrics.NodesByState.WithLabelValues(rule.Name, "not_ready").Set(float64(notReady))
+	metrics.NodesByState.WithLabelValues(rule.Name, "bootstrapping").Set(float64(bootstrapping))
+}
+
+// resetNodesByStateGauges clears per-state gauges for a rule (used for dry-run where we do not populate node evaluations).
+func resetNodesByStateGauges(ruleName string) {
+	for _, st := range []string{"ready", "not_ready", "bootstrapping"} {
+		metrics.NodesByState.WithLabelValues(ruleName, st).Set(0)
+	}
 }
 
 // evaluateRuleForNode evaluates a single rule against a single node.
 func (r *RuleReadinessController) evaluateRuleForNode(ctx context.Context, rule *readinessv1alpha1.NodeReadinessRule, node *corev1.Node) error {
-	timer := prometheus.NewTimer(metrics.EvaluationDuration)
+	timer := prometheus.NewTimer(metrics.EvaluationDuration.WithLabelValues(rule.Name))
 	defer timer.ObserveDuration()
 	log := ctrl.LoggerFrom(ctx)
 
@@ -310,6 +366,12 @@ func (r *RuleReadinessController) evaluateRuleForNode(ctx context.Context, rule 
 		if !satisfied {
 			allConditionsSatisfied = false
 		}
+
+		result := "pass"
+		if !satisfied {
+			result = "fail"
+		}
+		metrics.ConditionEvaluationTotal.WithLabelValues(rule.Name, condReq.Type, result, "live").Inc()
 
 		conditionResults = append(conditionResults, readinessv1alpha1.ConditionEvaluationResult{
 			Type:           condReq.Type,
@@ -346,6 +408,8 @@ func (r *RuleReadinessController) evaluateRuleForNode(ctx context.Context, rule 
 		// Mark bootstrap completed if bootstrap-only mode
 		if rule.Spec.EnforcementMode == readinessv1alpha1.EnforcementModeBootstrapOnly {
 			r.markBootstrapCompleted(ctx, node.Name, rule.Name)
+		} else {
+			r.bootstrapStartTimes.Delete(bootstrapStartKey(rule.Name, node.Name))
 		}
 
 	case !shouldRemoveTaint && !currentlyHasTaint:
@@ -363,6 +427,10 @@ func (r *RuleReadinessController) evaluateRuleForNode(ctx context.Context, rule 
 
 			message := fmt.Sprintf("Taint '%s:%s' is now managed by rule '%s'", rule.Spec.Taint.Key, rule.Spec.Taint.Effect, rule.Name)
 			r.EventRecorder.Event(node, corev1.EventTypeNormal, "TaintAdopted", message)
+
+			if rule.Spec.EnforcementMode == readinessv1alpha1.EnforcementModeBootstrapOnly {
+				r.bootstrapStartTimes.LoadOrStore(bootstrapStartKey(rule.Name, node.Name), time.Now())
+			}
 		}
 
 	default:
@@ -541,9 +609,15 @@ func (r *RuleReadinessController) processDryRun(ctx context.Context, rule *readi
 			if currentStatus == corev1.ConditionUnknown {
 				missingConditions++
 			}
-			if currentStatus != condReq.RequiredStatus {
+			satisfied := currentStatus == condReq.RequiredStatus
+			if !satisfied {
 				allConditionsSatisfied = false
 			}
+			result := "pass"
+			if !satisfied {
+				result = "fail"
+			}
+			metrics.ConditionEvaluationTotal.WithLabelValues(rule.Name, condReq.Type, result, "dry_run").Inc()
 		}
 
 		shouldRemoveTaint := allConditionsSatisfied
@@ -586,6 +660,8 @@ func (r *RuleReadinessController) processDryRun(ctx context.Context, rule *readi
 		Summary:         summary,
 	}
 
+	resetNodesByStateGauges(rule.Name)
+
 	return nil
 }
 
@@ -614,7 +690,9 @@ func (r *RuleReadinessController) cleanupTaintsForRule(ctx context.Context, rule
 
 			if err := r.removeTaintBySpec(ctx, &node, rule.Spec.Taint, rule.Name); err != nil {
 				errors = append(errors, fmt.Sprintf("node %s: %v", node.Name, err))
+				continue
 			}
+			metrics.TaintOperations.WithLabelValues(rule.Name, "remove").Inc()
 		}
 	}
 
@@ -666,7 +744,9 @@ func (r *RuleReadinessController) cleanupNodesAfterSelectorChange(ctx context.Co
 
 				if err := r.removeTaintBySpec(ctx, &node, newRule.Spec.Taint, newRule.Name); err != nil {
 					errors = append(errors, fmt.Sprintf("node %s: %v", node.Name, err))
+					continue
 				}
+				metrics.TaintOperations.WithLabelValues(newRule.Name, "remove").Inc()
 			}
 		}
 	}

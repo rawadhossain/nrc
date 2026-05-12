@@ -1,0 +1,82 @@
+# Demo NodeReadinessRules for PoC / local dev (apply after controller is running).
+# Labels: nrr-poc-demo=true (optional cleanup selector)
+---
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: gpu-driver-rule
+  labels:
+    nrr-poc-demo: "true"
+spec:
+  enforcementMode: continuous
+  dryRun: false
+  conditions:
+    - type: GPUDriverLoaded
+      requiredStatus: "True"
+  taint:
+    key: readiness.k8s.io/GPUReady
+    effect: NoSchedule
+    value: pending
+  nodeSelector:
+    matchLabels:
+      demo-ruleset: gpu
+---
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: cni-rule
+  labels:
+    nrr-poc-demo: "true"
+spec:
+  enforcementMode: continuous
+  dryRun: false
+  conditions:
+    - type: CNIReady
+      requiredStatus: "True"
+  taint:
+    key: readiness.k8s.io/CNIReady
+    effect: NoSchedule
+    value: pending
+  nodeSelector:
+    matchLabels:
+      demo-ruleset: cni
+---
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: storage-rule
+  labels:
+    nrr-poc-demo: "true"
+spec:
+  enforcementMode: bootstrap-only
+  dryRun: false
+  conditions:
+    - type: StorageReady
+      requiredStatus: "True"
+  taint:
+    key: readiness.k8s.io/StorageReady
+    effect: NoSchedule
+    value: pending
+  nodeSelector:
+    matchLabels:
+      demo-ruleset: storage
+---
+apiVersion: readiness.node.x-k8s.io/v1alpha1
+kind: NodeReadinessRule
+metadata:
+  name: network-fabric-rule-dryrun
+  labels:
+    nrr-poc-demo: "true"
+spec:
+  enforcementMode: continuous
+  dryRun: true
+  conditions:
+    - type: FabricReady
+      requiredStatus: "True"
+  taint:
+    key: readiness.k8s.io/FabricReady
+    effect: NoSchedule
+    value: pending
+  nodeSelector:
+    matchLabels:
+      demo-ruleset: dryrun

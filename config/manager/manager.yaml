@@ -30,6 +30,17 @@ spec:
         control-plane: controller-manager
         app.kubernetes.io/name: nrrcontroller
     spec:
+      # Exclude KWOK fake nodes: they have no real kubelet/container runtime, so in-cluster
+      # scrape, kubectl port-forward, and probes against real network namespaces do not work.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kwok.x-k8s.io/node
+                operator: NotIn
+                values:
+                - fake
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # The manager is deployed on control-plane nodes by default. Modify the nodeAffinity rules
       # according to your cluster preference and the platforms which are supported by your solution.

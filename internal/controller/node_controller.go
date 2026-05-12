@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -265,6 +266,8 @@ func (r *RuleReadinessController) addTaintBySpec(ctx context.Context, node *core
 			return err
 		}
 
+		r.bootstrapStartTimes.LoadOrStore(bootstrapStartKey(ruleName, latestNode.Name), time.Now())
+
 		message := fmt.Sprintf("Taint '%s:%s' added by rule '%s'", taintSpec.Key, taintSpec.Effect, ruleName)
 		r.EventRecorder.Event(latestNode, corev1.EventTypeNormal, "TaintAdded", message)
 
@@ -333,7 +336,7 @@ func (r *RuleReadinessController) markBootstrapCompleted(ctx context.Context, no
 	log := ctrl.LoggerFrom(ctx)
 
 	annotationKey := fmt.Sprintf("readiness.k8s.io/bootstrap-completed-%s", ruleName)
-	marked := false
+	patched := false
 
 	// retry to handle conflict with concurrent node updates
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -342,9 +345,9 @@ func (r *RuleReadinessController) markBootstrapCompleted(ctx context.Context, no
 			return err
 		}
 
-		// Check if already marked to avoid unnecessary updates
 		if node.Annotations != nil {
 			if _, exists := node.Annotations[annotationKey]; exists {
+				r.bootstrapStartTimes.Delete(bootstrapStartKey(ruleName, nodeName))
 				return nil
 			}
 		}
@@ -357,18 +360,25 @@ func (r *RuleReadinessController) markBootstrapCompleted(ctx context.Context, no
 		}
 
 		node.Annotations[annotationKey] = "true"
+
 		if err := r.Patch(ctx, node, patch); err != nil {
 			return err
 		}
 
-		marked = true
+		if v, ok := r.bootstrapStartTimes.LoadAndDelete(bootstrapStartKey(ruleName, nodeName)); ok {
+			if t0, ok2 := v.(time.Time); ok2 {
+				metrics.BootstrapDuration.WithLabelValues(ruleName).Observe(time.Since(t0).Seconds())
+			}
+		}
+
+		patched = true
 		return nil
 	})
 
 	switch {
 	case err != nil:
 		log.Error(err, "Failed to mark bootstrap completed", "node", nodeName, "rule", ruleName)
-	case marked:
+	case patched:
 		log.Info("Marked bootstrap completed", "node", nodeName, "rule", ruleName)
 		metrics.BootstrapCompleted.WithLabelValues(ruleName).Inc()
 	default:

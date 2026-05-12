@@ -1,4 +1,15 @@
-# This patch adds the args to allow exposing the metrics endpoint using HTTP
+# This patch exposes the metrics HTTP listener and declares container ports so
+# Endpoints, Service targetPort name resolution, and kubectl port-forward can
+# associate the metrics listener with a named container port.
 - op: add
   path: /spec/template/spec/containers/0/args/-
   value: --metrics-bind-address=:8080
+- op: replace
+  path: /spec/template/spec/containers/0/ports
+  value:
+    - name: metrics
+      containerPort: 8080
+      protocol: TCP
+    - name: probes
+      containerPort: 8081
+      protocol: TCP

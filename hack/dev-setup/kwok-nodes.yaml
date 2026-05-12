@@ -1,0 +1,959 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-gpu-0
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: gpu
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-gpu-0
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-gpu-1
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: gpu
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-gpu-1
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-gpu-2
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: gpu
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-gpu-2
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-gpu-3
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: gpu
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-gpu-3
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-gpu-4
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: gpu
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-gpu-4
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-cni-0
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: cni
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-cni-0
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-cni-1
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: cni
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-cni-1
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"  
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-cni-2
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: cni
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-cni-2
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-cni-3
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: cni
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-cni-3
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-cni-4
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: cni
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-cni-4
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-storage-0
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: storage
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-storage-0
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-storage-1
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: storage
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-storage-1
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-storage-2
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: storage
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-storage-2
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-storage-3
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: storage
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-storage-3
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-storage-4
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: storage
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-storage-4
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-dryrun-0
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: dryrun
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-dryrun-0
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-dryrun-1
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: dryrun
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-dryrun-1
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-dryrun-2
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: dryrun
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-dryrun-2
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-dryrun-3
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: dryrun
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-dryrun-3
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kwok-demo-dryrun-4
+  annotations:
+    node.alpha.kubernetes.io/ttl: "0"
+    kwok.x-k8s.io/node: fake
+  labels:
+    kwok.x-k8s.io/node: "fake"
+    demo-ruleset: dryrun
+    beta.kubernetes.io/arch: amd64
+    kubernetes.io/arch: amd64
+    kubernetes.io/hostname: kwok-demo-dryrun-4
+    kubernetes.io/os: linux
+    type: kwok
+spec:
+  taints:
+  - effect: NoSchedule
+    key: kwok.x-k8s.io/node
+    value: fake
+status:
+  allocatable:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  capacity:
+    cpu: "32"
+    memory: 256Gi
+    pods: "110"
+  nodeInfo:
+    architecture: amd64
+    kubeProxyVersion: fake
+    kubeletVersion: fake
+    operatingSystem: linux
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+    machineID: "kwok-machine"
+    systemUUID: "kwok-system-uuid"
+    bootID: "kwok-boot-id"
+    kernelVersion: "6.6.0"
+    osImage: "Ubuntu 22.04"
+    containerRuntimeVersion: "containerd://1.7.0"
+  phase: Running

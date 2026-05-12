@@ -12,7 +12,7 @@ spec:
   - name: http
     port: 8080
     protocol: TCP
-    targetPort: 8080
+    targetPort: metrics
   selector:
     control-plane: controller-manager
     app.kubernetes.io/name: nrrcontroller

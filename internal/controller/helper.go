@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -130,4 +131,14 @@ func labelsEqual(a, b map[string]string) bool {
 	}
 
 	return true
+}
+
+// bootstrapStartKey is a stable map key for tracking bootstrap timing (rule + node).
+func bootstrapStartKey(ruleName, nodeName string) string {
+	var b strings.Builder
+	b.Grow(len(ruleName) + len(nodeName) + 1)
+	b.WriteString(ruleName)
+	b.WriteByte(0)
+	b.WriteString(nodeName)
+	return b.String()
 }

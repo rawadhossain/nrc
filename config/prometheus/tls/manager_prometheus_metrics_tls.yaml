@@ -1,4 +1,5 @@
 # This patch adds the args to allow exposing the metrics endpoint using HTTPS
+# and declares ports so Service port-forwarding resolves the metrics listener.
 - op: add
   path: /spec/template/spec/containers/0/args/-
   value: --metrics-bind-address=:8443
@@ -8,3 +9,12 @@
 - op: add
   path: /spec/template/spec/containers/0/args/-
   value: --metrics-cert-dir=/tmp/k8s-metrics-server/metrics-certs
+- op: replace
+  path: /spec/template/spec/containers/0/ports
+  value:
+    - name: https
+      containerPort: 8443
+      protocol: TCP
+    - name: probes
+      containerPort: 8081
+      protocol: TCP

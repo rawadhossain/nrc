@@ -1,0 +1,6 @@
+# One-node Kind cluster for NRC PoC + KWOK fake nodes (no extra workers required).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: nrr-poc
+nodes:
+  - role: control-plane
