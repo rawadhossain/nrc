@@ -1,89 +1,309 @@
-# Node Readiness Controller
+# Node Readiness Controller — Per-Rule Metrics and Headlamp Plugin
+## LFX Mentorship PoC
+This repository is my proof-of-concept fork of `node-readiness-controller` for the **CNCF LFX Mentorship 2026 Term 2** project:
 
-<img style="float: right; margin: auto;"  width="180px" src="docs/book/src/logo/node-readiness-controller-logo.svg"/>
+> **Per-Rule Metrics and Headlamp Plugin for Node Readiness Controller**
 
-A Kubernetes controller that provides fine-grained, declarative readiness for nodes. It ensures nodes only accept workloads when all required components eg: network agents, GPU drivers,
-storage drivers or custom health-checks, are fully ready on the node.
+The goal of this PoC was to improve **observability and usability** around Node Readiness Controller by adding:
 
-This project implements the proposed [NodeReadinessGates](https://github.com/kubernetes/enhancements/pull/5416) API (KEP 5233) as an out-of-band solution and brings it to any Kubernetes cluster.
+- Per-rule Prometheus metrics inside the controller
+- A Headlamp plugin for visualizing readiness state
+- Grafana dashboards for SLO-style monitoring
+- A reproducible local demo environment
 
-Use it to orchestrate complex bootstrap steps in your node-init workflow, enforce node health and improve workload reliability.
+This README focuses on **what I changed and where to look.**
 
-## What is Node Readiness Controller?
+---
 
-The Node Readiness Controller extends Kubernetes' node readiness model by allowing you to define additional pre-requisites for nodes (as readiness rules) in node conditions. It automatically manages node taints to prevent scheduling until all specified conditions are satisfied.
+# Quick Review Path
 
-## Why This Project?
+If you're reviewing this PoC and want the shortest path:
 
-Kubernetes node has a simple "Ready" condition. Modern workloads need more critical infrastructure dependencies before they can run.
+### Backend (metrics)
 
-With this controller you can:
-- Define custom readiness for your workload
-- Automatically taint and untaint nodes
-- Support continuous readiness enforcement to block scheduling for fuse break scenarios
-- Integrate with existing problem-detectors like NPD or any custom daemons / node plugins for reporting readiness
-
-### Key Features
-
-- **Multi-condition Rules**: Define rules that require ALL specified conditions to be satisfied
-- **Flexible Enforcement**: Support for bootstrap-only and continuous enforcement modes
-- **Conflict Prevention**: Validation webhook prevents conflicting taint configurations
-- **Dry Run Mode**: Preview rule impact before applying changes
-- **Comprehensive Status**: Detailed observability into rule evaluation and node readiness status
-- **Node Targeting**: Use label selectors to target specific node types
-- **Bootstrap Completion Tracking**: Prevents re-evaluation once bootstrap conditions are met
-
-## Demo
-
-**Node Readiness Controller in Kind cluster**
-
-![Node Readiness Demo](docs/demo.gif)
-
-**Example Rule**
-
-```yaml
-apiVersion: readiness.node.x-k8s.io/v1alpha1
-kind: NodeReadinessRule
-metadata:
-  name: network-readiness-rule
-spec:
-  conditions:
-    - type: "example.com/CNIReady"
-      requiredStatus: "True"
-  taint:
-    key: "readiness.k8s.io/NetworkReady"
-    effect: "NoSchedule"
-    value: "pending"
-  enforcementMode: "bootstrap-only"
-  nodeSelector:
-    matchLabels:
-      node-role.kubernetes.io/worker: ""
+```text
+internal/metrics/metrics.go
+internal/controller/nodereadinessrule_controller.go
+internal/controller/node_controller.go
 ```
 
-Find a more detailed walkthrough of setting up Node Readiness Controller in your Kind cluster [here](https://github.com/kubernetes-sigs/node-readiness-controller/blob/main/docs/TEST_README.md).
+### Frontend (Headlamp plugin)
 
-## High-level Roadmap
+```text
+plugins/node-readiness-controller/
+```
 
-- [X] Release v0.1.0
-- [X] Add documentation capturing design details
-- [X] Metrics and alerting integration
-- [X] Validation Webhook for rules
-- [ ] Improve logging and add debugging pointers
-- [ ] Performance optimizations for large clusters
-- [ ] Scale testing 1000+ nodes
+### Dashboard
 
-## Getting Involved
+```text
+hack/dashboards/nrc-slo-dashboard.json
+```
 
-If you're interested in participating in future discussions or development related to Node Readiness Controller, you can reach the maintainers of the project at:
+### Demo environment
 
-- **Slack**: [#sig-node-readiness-controller](https://kubernetes.slack.com/messages/sig-node-readiness-controller). (visit [slack.k8s.io](https://slack.k8s.io) for a workspace invitation)
+```text
+hack/dev-setup/
+```
 
-Open Issues / PRs / Discussions here:
-- **Issues**: [GitHub Issues](https://github.com/kubernetes-sigs/node-readiness-controller/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/kubernetes-sigs/node-readiness-controller/discussions)
+---
 
-See the Kubernetes community on the [community page](http://kubernetes.io/community/). You can also engage with SIG Node at [#sig-node](https://kubernetes.slack.com/messages/sig-node) and [mailing List](https://groups.google.com/a/kubernetes.io/g/sig-node)
+# Screenshots
 
-### Code of conduct
+### Cluster Overview
 
-Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
+![Overview](docs/poc-headlamp/overview.png)
+![Overview2](docs/poc-headlamp/overview2.png)
+
+Cluster readiness summary showing managed nodes, blocked nodes, rule status, and readiness progress.
+
+---
+
+### Active Blockers
+
+![Active Blockers](docs/poc-headlamp/active-blockers.png)
+
+Real-time blocker table showing which rules and conditions are preventing nodes from becoming ready.
+
+---
+
+### Rules
+
+![Rules](docs/poc-headlamp/rules.png)
+
+Rule overview with enforcement mode, taint settings, evaluation counts, and failure visibility.
+
+---
+
+### Rule Detail
+
+![Rule Detail](docs/poc-headlamp/rule-detail.png)
+
+Detailed rule inspection including conditions, dry-run impact preview, and controller errors.
+
+---
+
+# What I built
+
+## 1. Extended Prometheus Metrics (Go)
+
+The upstream controller already exposes some metrics.
+
+This PoC extends it with **per-rule observability**, allowing operators to answer questions like:
+
+- Which rules trigger most frequently?
+- Which rules take the longest to evaluate?
+- Which conditions fail most often?
+- Are nodes blocked because of actual enforcement or dry-run?
+- How long does bootstrap take?
+
+### Main implementation files
+
+| Purpose                                     | File                                                  |
+| ------------------------------------------- | ----------------------------------------------------- |
+| Metric definitions + registration           | `internal/metrics/metrics.go`                         |
+| Rule reconcile + evaluation instrumentation | `internal/controller/nodereadinessrule_controller.go` |
+| Node-level signals + bootstrap timing       | `internal/controller/node_controller.go`              |
+
+### Added metric categories
+
+- Evaluation latency per rule
+- Condition pass/fail counters
+- Taint operation metrics
+- Bootstrap duration
+- Reconcile timing
+- Rule execution statistics
+
+These metrics are what power the Grafana dashboard.
+
+---
+
+## 2. Headlamp Plugin (TypeScript / React)
+
+Everything for the UI lives under:
+
+```text
+plugins/node-readiness-controller/
+```
+
+The plugin reads `NodeReadinessRule` resources directly from Kubernetes and exposes them through multiple views.
+
+---
+
+### Overview
+
+Cluster-wide readiness summary.
+
+Main file:
+
+```text
+src/components/ClusterReadinessOverview.tsx
+```
+
+Shows:
+
+- Managed nodes
+- Ready vs blocked
+- Active rules
+- Dry-run rules
+- Rule progress
+
+---
+
+### Active Blockers
+
+Main files:
+
+```text
+src/components/ActiveBlockers.tsx
+src/activeBlockersRows.ts
+```
+
+Shows:
+
+- Blocked nodes
+- Failing conditions
+- Responsible rule
+- Time blocked
+- Stuck state detection
+
+---
+
+### Rules List
+
+Main file:
+
+```text
+src/components/RuleList.tsx
+```
+
+Shows:
+
+- All rules
+- Enforcement mode
+- Evaluation counts
+- Failed nodes
+
+---
+
+### Rule Detail
+
+Main files:
+
+```text
+src/components/RuleDetail.tsx
+src/components/rules/
+```
+
+Shows:
+
+- Condition breakdown
+- Node evaluation
+- Dry-run impact
+- Error inspection
+
+---
+
+### Supporting infrastructure
+
+| Purpose                   | File                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| Plugin entry + routing    | `src/index.tsx`, `src/sidebarInstall.ts`, `src/pluginRoutes.ts` |
+| Resource layer            | `src/types.ts`, `src/resources/nodeReadinessRule.ts`            |
+| NRC availability handling | `src/hooks/useNodeReadinessAPI.ts`, `src/nrcInstallGate.ts`     |
+| Error UI                  | `src/components/rules/ErrorPanel.tsx`                           |
+
+The plugin also handles the case where NRC is not installed and shows a safe fallback state.
+
+---
+
+## 3. Grafana Dashboard
+
+Dashboard:
+
+```text
+hack/dashboards/nrc-slo-dashboard.json
+```
+
+Built directly on top of the new metrics.
+
+Panels include:
+
+- Bootstrap latency
+- Rule evaluation latency
+- Failure trends
+- Taint throughput
+- Rule bottleneck ranking
+
+Import instructions:
+
+```text
+hack/dashboards/README.md
+```
+
+---
+
+# Run Locally
+
+Full setup:
+
+```text
+hack/dev-setup/README.md
+```
+
+Recommended order:
+
+```text
+CRDs
+→ Controller + Metrics
+→ KWOK
+→ Monitoring
+→ Rules
+→ Nodes
+→ Condition patching
+```
+
+Generate demo data:
+
+```bash
+./hack/dev-setup/demo-data.sh
+```
+
+Build plugin:
+
+```bash
+cd plugins/node-readiness-controller
+
+npm install
+npm run build
+npm run package
+```
+
+Deploy:
+
+```bash
+./deploy.sh
+```
+
+---
+
+## What's different from upstream
+
+The upstream `kubernetes-sigs/node-readiness-controller` repo doesn't have a `plugins/` tree or any of the `hack/dev-setup/` demo infrastructure. Everything I added is clearly separated:
+
+- `plugins/` — entirely new, not in upstream
+- `hack/dashboards/` — entirely new
+- `hack/dev-setup/` — extended with demo scripts, monitoring setup, KWOK node configs
+- `internal/metrics/metrics.go` — extended with new metric definitions
+- `internal/controller/nodereadinessrule_controller.go` — instrumented with metric updates
+- `internal/controller/node_controller.go` — instrumented with node-level signals
+
+The controller's reconciliation logic itself is unchanged. All changes are either additive (new metrics, new plugin) or observability instrumentation alongside existing code paths.
+
+---
+
+# Links
+
+- Upstream repo: https://github.com/kubernetes-sigs/node-readiness-controller
+- LFX project: https://mentorship.lfx.linuxfoundation.org/project/052329cb-9237-4950-90b2-78461302f8af
+- Related issue: https://github.com/kubernetes-sigs/node-readiness-controller/issues/151
+- Kubernetes Slack: https://kubernetes.slack.com/messages/sig-node-readiness-controller
