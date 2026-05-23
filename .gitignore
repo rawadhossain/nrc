@@ -1,3 +1,6 @@
+# Upstream Headlamp plugins clone nested git — local only (see plugins/README_upstream_plugins_git.md)
+plugins/.git.upstream-plugins-clone.backup/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -38,3 +41,6 @@ hack/test-workloads/ignore-pending/*
 CLAUDE.md
 GEMINI.md
 
+Detailed.md
+project_idea.md
+Testing_guide.md
