@@ -1,0 +1,135 @@
+import { getTimeRangeAndStepSize, supportsPrometheusMetrics } from './util';
+
+beforeAll(async () => {
+  global.TextEncoder = require('util').TextEncoder;
+  global.TextDecoder = require('util').TextDecoder;
+});
+
+describe('getTimeRangeAndStepSize', () => {
+  // Mock the current timestamp for consistent testing
+  const mockNow = 1700000000;
+  const day = 86400; // seconds in a day
+
+  beforeEach(() => {
+    vitest.spyOn(Date, 'now').mockImplementation(() => mockNow * 1000);
+  });
+
+  afterEach(() => {
+    vitest.restoreAllMocks();
+  });
+
+  test.each([
+    ['10m', 'medium', { from: mockNow - 600, to: mockNow, step: 2 }],
+    ['30m', 'medium', { from: mockNow - 1800, to: mockNow, step: 7 }],
+    ['3h', 'medium', { from: mockNow - 10800, to: mockNow, step: 43 }],
+    ['24h', 'medium', { from: mockNow - day, to: mockNow, step: 345 }],
+    [
+      'today',
+      'medium',
+      {
+        from: mockNow - (mockNow % day),
+        to: mockNow,
+        step: Math.max(
+          Math.floor(((mockNow - (mockNow - (mockNow % day))) * 1000) / 250 / 1000),
+          1
+        ),
+      },
+    ],
+    [
+      'yesterday',
+      'medium',
+      {
+        from: mockNow - (mockNow % day) - day,
+        to: mockNow - (mockNow % day),
+        step: 345,
+      },
+    ],
+    ['week', 'medium', { from: mockNow - 7 * day, to: mockNow, step: 2419 }],
+    [
+      'lastweek',
+      'medium',
+      {
+        from: mockNow - 14 * day,
+        to: mockNow - 7 * day,
+        step: 2419,
+      },
+    ],
+
+    // Different resolutions with same interval
+    ['1h', 'low', { from: mockNow - 3600, to: mockNow, step: 36 }], // timeRange / 100
+    ['1h', 'medium', { from: mockNow - 3600, to: mockNow, step: 14 }], // timeRange / 250
+    ['1h', 'high', { from: mockNow - 3600, to: mockNow, step: 4 }], // timeRange / 750
+
+    // Fixed step sizes with same interval
+    ['1h', '30s', { from: mockNow - 3600, to: mockNow, step: 30 }],
+    ['1h', '15m', { from: mockNow - 3600, to: mockNow, step: 900 }],
+    ['1h', '1h', { from: mockNow - 3600, to: mockNow, step: 3600 }],
+
+    // Edge cases
+    ['1m', 'medium', { from: mockNow - 60, to: mockNow, step: 1 }], // Minimum step size is 1
+    ['14d', 'medium', { from: mockNow - 14 * day, to: mockNow, step: 4838 }], // Large time range
+    [
+      'invalid', // Falls back to 10 minutes interval
+      'medium',
+      {
+        from: mockNow - 600,
+        to: mockNow,
+        step: 2,
+      },
+    ],
+    [
+      '1h',
+      'invalid', // Falls back to medium resolution
+      { from: mockNow - 3600, to: mockNow, step: 14 },
+    ],
+  ])(
+    'should return correct timeRange and stepSize for %s interval and %s resolution',
+    (interval, resolution, expected) => {
+      const result = getTimeRangeAndStepSize(interval, resolution);
+      expect(result).toEqual(expected);
+    }
+  );
+
+  test('should handle different timestamps correctly', () => {
+    // Test with a specific timestamp
+    const specificTime = 1600000000;
+    vitest.spyOn(Date, 'now').mockImplementation(() => specificTime * 1000);
+
+    const result = getTimeRangeAndStepSize('1h', 'medium');
+    expect(result).toEqual({
+      from: specificTime - 3600,
+      to: specificTime,
+      step: 14,
+    });
+  });
+});
+
+describe('supportsPrometheusMetrics', () => {
+  test.each([
+    ['supports Pods', { kind: 'Pod', jsonData: { kind: 'Pod', apiVersion: 'v1' } }, true],
+    [
+      'supports Kubernetes Jobs',
+      { kind: 'Job', jsonData: { kind: 'Job', apiVersion: 'batch/v1' } },
+      true,
+    ],
+    [
+      'rejects non-Kubernetes Jobs with same kind',
+      { kind: 'Job', jsonData: { kind: 'Job', apiVersion: 'batch.volcano.sh/v1alpha1' } },
+      false,
+    ],
+    [
+      'supports CronJobs through the shared allowlist',
+      { kind: 'CronJob', jsonData: { kind: 'CronJob', apiVersion: 'batch/v1' } },
+      true,
+    ],
+    [
+      'supports ScaledObjects from known supported kinds',
+      { kind: 'ScaledObject', jsonData: { kind: 'ScaledObject', apiVersion: 'keda.sh/v1alpha1' } },
+      true,
+    ],
+    ['rejects unknown kinds', { kind: 'VolcanoJob', jsonData: { kind: 'VolcanoJob' } }, false],
+    ['rejects missing resources', undefined, false],
+  ])('%s', (_, resource, expected) => {
+    expect(supportsPrometheusMetrics(resource)).toBe(expected);
+  });
+});
